@@ -2,7 +2,6 @@
 
 import json
 import logging
-import re
 import zipfile
 from pathlib import Path
 
@@ -26,44 +25,3 @@ def read_package_json(extension_dir: Path) -> dict:
     package_json_path = extension_dir / "package.json"
     with package_json_path.open("r", encoding="utf-8") as fh:
         return json.load(fh)
-
-
-def extract_repo_info(package_json: dict) -> tuple[str | None, str | None]:
-    """Return (normalized_repo_url, version) from a parsed package.json.
-
-    Repo URL may be `None` when no repository field is present or it is not a
-    git URL we know how to clone.
-    """
-    version = package_json.get("version")
-    repo_field = package_json.get("repository")
-
-    raw_url: str | None = None
-    if isinstance(repo_field, str):
-        raw_url = repo_field
-    elif isinstance(repo_field, dict):
-        raw_url = repo_field.get("url")
-
-    normalized = _normalize_git_url(raw_url) if raw_url else None
-    if raw_url and not normalized:
-        log.info("repository field present but not a recognized git URL: %r", raw_url)
-    return normalized, version
-
-
-def _normalize_git_url(url: str) -> str | None:
-    """Normalize various git URL spellings to https form, or return None."""
-    cleaned = url.strip()
-    if cleaned.startswith("git+"):
-        cleaned = cleaned[len("git+"):]
-    if cleaned.endswith(".git"):
-        # keep the .git suffix - git clone accepts both forms but it's canonical
-        pass
-
-    # git@github.com:owner/repo(.git) -> https://github.com/owner/repo(.git)
-    ssh_match = re.match(r"^git@([^:]+):(.+)$", cleaned)
-    if ssh_match:
-        host, path = ssh_match.groups()
-        cleaned = f"https://{host}/{path}"
-
-    if cleaned.startswith(("http://", "https://", "ssh://")):
-        return cleaned
-    return None

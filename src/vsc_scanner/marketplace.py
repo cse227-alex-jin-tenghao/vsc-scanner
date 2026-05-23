@@ -24,8 +24,8 @@ class ExtensionNotFoundError(RuntimeError):
     """Raised when the marketplace query returns no matching extension."""
 
 
-def query_latest_version(publisher: str, name: str) -> str:
-    """Return the latest published version string for `publisher.name`."""
+def query_latest_version(publisher: str, name: str) -> tuple[str, str | None]:
+    """Return (version, last_updated_iso) for the latest published version."""
     item_name = f"{publisher}.{name}"
     body = {
         "filters": [
@@ -55,9 +55,13 @@ def query_latest_version(publisher: str, name: str) -> str:
     if not versions:
         raise ExtensionNotFoundError(f"no versions listed for {item_name!r}")
 
-    version = versions[0]["version"]
-    log.info("latest version of %s is %s", item_name, version)
-    return version
+    latest = versions[0]
+    version = latest["version"]
+    # Marketplace API may surface either `lastUpdated` on the version entry or
+    # on the extension itself; prefer the per-version timestamp.
+    last_updated = latest.get("lastUpdated") or extensions[0].get("lastUpdated")
+    log.info("latest version of %s is %s (lastUpdated=%s)", item_name, version, last_updated)
+    return version, last_updated
 
 
 def download_vsix(publisher: str, name: str, version: str, dest_path: Path) -> Path:
