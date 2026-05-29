@@ -74,9 +74,9 @@ def preprocess(extension_dir: Path, dest_dir: Path) -> PreprocessResult:
             scanned_as = "beautified_only"
         elif _try_webcrack(dest_dir, notes):
             # webcrack is slow (multi-minute on large bundles); only used as a
-            # fallback if js-beautify isn't available. Most pattern-based rules
-            # in semgrep/njsscan key on string literals (e.g. require("fs"))
-            # which survive minification, so beautify is usually sufficient.
+            # fallback if js-beautify isn't available. Most pattern-based
+            # semgrep rules key on string literals (e.g. require("fs")) which
+            # survive minification, so beautify is usually sufficient.
             scanned_as = "unpacked"
         else:
             scanned_as = "beautified_only"

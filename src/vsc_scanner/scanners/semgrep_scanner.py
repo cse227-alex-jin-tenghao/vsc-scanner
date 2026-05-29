@@ -11,11 +11,18 @@ from vsc_scanner.structs import ExtensionBundle
 
 log = logging.getLogger("vsc_scanner")
 
+# Custom rules live at <project-root>/rules. Resolved relative to this file
+# so the path works whether the CLI is invoked from the repo root or elsewhere.
+_RULES_DIR = Path(__file__).resolve().parents[3] / "rules"
+
 
 class SemgrepScanner(Scanner):
-    def __init__(self, deep: bool = False) -> None:
+    def __init__(self, deep: bool = False, jobs: int | None = None) -> None:
         self.name = "semgrep"
         self.deep = deep
+        # `jobs` overrides --jobs in fast mode. Batch runners that fan out N
+        # extensions in parallel set this to (cores / N) to avoid oversubscription.
+        self.jobs = jobs
 
     def targets(self, bundle: ExtensionBundle) -> list[tuple[str, Path]]:
         target = bundle.preprocessed_dir or bundle.extension_dir
@@ -44,8 +51,10 @@ class SemgrepScanner(Scanner):
                 "--max-target-bytes", "2000000",
                 "--timeout", "5",
                 "--timeout-threshold", "3",
-                "--jobs", str(os.cpu_count() or 4),
+                "--jobs", str(self.jobs if self.jobs else (os.cpu_count() or 4)),
             ]
+        if _RULES_DIR.is_dir():
+            argv += ["--config", str(_RULES_DIR)]
         argv += ["--json", "--quiet", str(target)]
         return argv
 
@@ -70,6 +79,7 @@ class SemgrepScanner(Scanner):
         findings = []
         for r in data.get("results", []):
             extra = r.get("extra", {}) or {}
+            metadata = extra.get("metadata") or {}
             findings.append(
                 {
                     "check_id": r.get("check_id"),
@@ -78,6 +88,8 @@ class SemgrepScanner(Scanner):
                     "end_line": (r.get("end") or {}).get("line"),
                     "message": extra.get("message"),
                     "severity": extra.get("severity"),
+                    "intent": metadata.get("intent"),
+                    "requires_clean_source": bool(metadata.get("requires_clean_source", False)),
                 }
             )
         paths = data.get("paths") or {}

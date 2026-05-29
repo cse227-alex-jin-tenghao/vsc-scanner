@@ -9,9 +9,9 @@ from vsc_scanner.structs import ExtensionBundle
 
 _STDERR_TAIL_BYTES = 2048
 
-# Prepended to PATH for every scanner subprocess. njsscan shells out to semgrep,
-# semgrep finds rule plugins via PATH, etc. — they all need to see the venv
-# and the project-local tools/ dir without requiring a system-wide install.
+# Prepended to PATH for every scanner subprocess. Semgrep finds rule plugins
+# via PATH, retire.js shells out to node, etc. — they all need to see the
+# venv and the project-local tools/ dir without requiring a system-wide install.
 _PROJECT_ROOT = Path(__file__).resolve().parents[3]
 _EXTRA_PATH = os.pathsep.join(
     str(p)

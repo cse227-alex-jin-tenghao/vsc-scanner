@@ -1,0 +1,6 @@
+# Almost nothing belongs in the image — the repo gets git-cloned into
+# the shared $HOME at pod launch time. Keep the build context tiny so
+# `docker build` is fast and the layer cache doesn't bust on log churn.
+*
+!Dockerfile
+!docker/entrypoint.sh

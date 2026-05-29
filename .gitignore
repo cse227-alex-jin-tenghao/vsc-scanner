@@ -1,0 +1,39 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments (highly recommended)
+venv/
+.venv/
+env/
+bin/
+include/
+lib/
+
+# Distribution / packaging (build artifacts)
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Unit test / coverage reports
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+htmlcov/
+
+# Environment variables (security)
+.env
+.venv
+
+# Secrets — these contain the Supabase password
+pw.txt
+cluster-run.sh
+log.txt
+out.txt
+
+# Reference template from the K3Zeta cluster job — not part of this project
+run.sh
