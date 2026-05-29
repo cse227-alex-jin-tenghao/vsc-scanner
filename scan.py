@@ -18,7 +18,6 @@ from vsc_scanner.preprocess import preprocess  # noqa: E402
 from vsc_scanner.runner import run_scanners  # noqa: E402
 from vsc_scanner.scanners.gitleaks_scanner import GitleaksScanner  # noqa: E402
 from vsc_scanner.scanners.ls_scanner import LsScanner  # noqa: E402
-from vsc_scanner.scanners.njsscan_scanner import NjsscanScanner  # noqa: E402
 from vsc_scanner.scanners.osv_scanner import OsvScanner  # noqa: E402
 from vsc_scanner.scanners.retirejs_scanner import RetireJsScanner  # noqa: E402
 from vsc_scanner.scanners.semgrep_scanner import SemgrepScanner  # noqa: E402
@@ -95,7 +94,6 @@ def _build_scanners(smoke: bool, deep: bool) -> list:
         return [LsScanner()]
     return [
         SemgrepScanner(deep=deep),
-        NjsscanScanner(),
         RetireJsScanner(),
         OsvScanner(),
         GitleaksScanner(),

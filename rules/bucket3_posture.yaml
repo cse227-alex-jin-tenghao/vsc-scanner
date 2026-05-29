@@ -1,0 +1,74 @@
+rules:
+  - id: tls-verification-disabled
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: TLS certificate validation disabled — exposes traffic to MITM.
+    metadata:
+      intent: posture_degradation
+      requires_clean_source: false
+    pattern-either:
+      - pattern: process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
+      - pattern: process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0
+      - pattern: |
+          { ..., rejectUnauthorized: false, ... }
+
+  - id: programmatic-settings-modification
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Extension is writing VS Code settings programmatically.
+    metadata:
+      intent: posture_degradation
+      requires_clean_source: false
+    pattern-either:
+      - pattern: $WS.getConfiguration(...).update(...)
+      - pattern: vscode.workspace.getConfiguration(...).update(...)
+
+  - id: hidden-terminal
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Terminal is created hidden from the user (hideFromUser=true).
+    metadata:
+      intent: posture_degradation
+      requires_clean_source: false
+    pattern-either:
+      - pattern: |
+          $X.createTerminal({ ..., hideFromUser: true, ... })
+      - pattern: |
+          createTerminal({ ..., hideFromUser: true, ... })
+
+  - id: non-localhost-listener
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: TCP/HTTP server listening on a non-localhost host.
+    metadata:
+      intent: posture_degradation
+      requires_clean_source: false
+    pattern-either:
+      - pattern: $SRV.listen($PORT, "0.0.0.0", ...)
+      - pattern: '$SRV.listen({ ..., host: "0.0.0.0", ... })'
+
+  - id: weak-hash
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Weak cryptographic hash (MD5/SHA1).
+    metadata:
+      intent: posture_degradation
+      requires_clean_source: false
+    pattern-either:
+      - pattern: crypto.createHash("md5")
+      - pattern: crypto.createHash("sha1")
+      - pattern: $C.createHash("md5")
+      - pattern: $C.createHash("sha1")
+
+  - id: hardcoded-iv-or-key
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Hard-coded IV or key passed to a cipher.
+    metadata:
+      intent: posture_degradation
+      requires_clean_source: false
+    pattern-either:
+      - pattern: crypto.createCipheriv($ALG, "...", "...")
+      - pattern: crypto.createDecipheriv($ALG, "...", "...")
+      - pattern: $C.createCipheriv($ALG, "...", "...")
+      - pattern: $C.createDecipheriv($ALG, "...", "...")

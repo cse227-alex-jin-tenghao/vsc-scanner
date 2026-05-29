@@ -1,0 +1,87 @@
+rules:
+  - id: plaintext-credential-config
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Configuration key name suggests a credential is being read in plaintext.
+    metadata:
+      intent: inventory
+      requires_clean_source: true
+    pattern-either:
+      - pattern-regex: getConfiguration\([^)]*\)\.get\(\s*["'`][^"'`]*(?i)(apiKey|api_key|password|passwd|token|secret|access[_-]?key)[^"'`]*["'`]
+
+  - id: clipboard-read
+    languages: [javascript, typescript]
+    severity: INFO
+    message: Extension reads the user's clipboard.
+    metadata:
+      intent: inventory
+      requires_clean_source: false
+    pattern-either:
+      - pattern: vscode.env.clipboard.readText(...)
+      - pattern: env.clipboard.readText(...)
+      - pattern: $V.env.clipboard.readText(...)
+
+  - id: secret-storage-use
+    languages: [javascript, typescript]
+    severity: INFO
+    message: Extension uses the SecretStorage API (good practice).
+    metadata:
+      intent: inventory
+      good_practice: true
+      requires_clean_source: true
+    pattern-either:
+      - pattern: $CTX.secrets.store(...)
+      - pattern: $CTX.secrets.get(...)
+      - pattern: $CTX.secrets.delete(...)
+
+  - id: cross-extension-state-access
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Code references another extension's storage path (state.vscdb / globalStorage).
+    metadata:
+      intent: inventory
+      requires_clean_source: false
+    pattern-regex: (state\.vscdb|globalStorage/[\w.-]+)
+
+  - id: decode-then-execute
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Base64/atob-decoded value flows into a code-eval or shell sink.
+    metadata:
+      intent: inventory
+      requires_clean_source: true
+    mode: taint
+    pattern-sources:
+      - pattern: Buffer.from($X, "base64")
+      - pattern: atob($X)
+    pattern-sinks:
+      - pattern: eval($Y)
+      - pattern: new Function($Y)
+      - pattern: child_process.exec($Y, ...)
+      - pattern: $CP.exec($Y, ...)
+
+  - id: download-then-execute
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Network response flows into a shell command.
+    metadata:
+      intent: inventory
+      requires_clean_source: true
+    mode: taint
+    pattern-sources:
+      - pattern: fetch(...)
+      - pattern: axios.get(...)
+      - pattern: http.get(...)
+    pattern-sinks:
+      - pattern: child_process.exec($Y, ...)
+      - pattern: child_process.execSync($Y, ...)
+      - pattern: $CP.exec($Y, ...)
+
+  - id: bundled-binary-reference
+    languages: [javascript, typescript]
+    severity: INFO
+    message: Source references a bundled binary (.exe/.jar/.node/.sh/.dll/.ps1).
+    metadata:
+      intent: inventory
+      requires_clean_source: false
+    pattern-regex: "[\"'`][^\"'`]+\\.(exe|jar|node|sh|ps1|dll)[\"'`]"
