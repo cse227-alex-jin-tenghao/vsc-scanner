@@ -7,9 +7,9 @@ __pycache__/
 venv/
 .venv/
 env/
-bin/
-include/
-lib/
+/bin/
+/include/
+/lib/
 
 # Distribution / packaging (build artifacts)
 dist/
